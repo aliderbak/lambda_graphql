@@ -1,0 +1,376 @@
+{
+  "service": {
+    "service": "simpleApp",
+    "serviceObject": {
+      "name": "simpleApp"
+    },
+    "provider": {
+      "name": "aws",
+      "runtime": "python3.8",
+      "region": "eu-west-1",
+      "stage": "dev",
+      "deploymentBucket": "wealt",
+      "memorySize": 1280,
+      "timeout": 30,
+      "lambdaHashingVersion": "20201221",
+      "environment": {
+        "STAGE": "dev",
+        "TABLE_NAME": "table_rds-dev"
+      },
+      "role": "arn:aws:iam::071228261431:role/wealt_test",
+      "apiGateway": {
+        "restApiId": {
+          "Fn::ImportValue": "SharedGW-restApiId-dev"
+        },
+        "restApiRootResourceId": {
+          "Fn::ImportValue": "SharedGW-rootResourceId-dev"
+        }
+      },
+      "versionFunctions": true,
+      "deploymentBucketObject": {
+        "blockPublicAccess": true,
+        "skipPolicySetup": false,
+        "name": "wealt",
+        "maxPreviousDeploymentArtifacts": 5,
+        "versioning": false,
+        "serverSideEncryption": "AES256"
+      },
+      "compiledCloudFormationTemplate": {
+        "AWSTemplateFormatVersion": "2010-09-09",
+        "Description": "The AWS CloudFormation template for this Serverless application",
+        "Resources": {
+          "GetDataLogGroup": {
+            "Type": "AWS::Logs::LogGroup",
+            "Properties": {
+              "LogGroupName": "/aws/lambda/simpleApp-dev-getData"
+            }
+          },
+          "GetDataLambdaFunction": {
+            "Type": "AWS::Lambda::Function",
+            "Properties": {
+              "Code": {
+                "S3Bucket": "wealt",
+                "S3Key": "serverless/simpleApp/dev/1651178634781-2022-04-28T20:43:54.781Z/getData.zip"
+              },
+              "Handler": "src/main.run",
+              "Runtime": "python3.8",
+              "FunctionName": "simpleApp-dev-getData",
+              "MemorySize": 1280,
+              "Timeout": 30,
+              "Environment": {
+                "Variables": {
+                  "STAGE": "dev",
+                  "TABLE_NAME": "table_rds-dev"
+                }
+              },
+              "Role": "arn:aws:iam::071228261431:role/wealt_test",
+              "Layers": [
+                "arn:aws:lambda:eu-west-1:770693421928:layer:Klayers-python38-graphene:2"
+              ]
+            },
+            "DependsOn": [
+              "GetDataLogGroup"
+            ]
+          },
+          "GetDataLambdaVersion19qtKbPyMq78VXnDkS8GFdvoPtiz1WmPjD8WKP40ZRk": {
+            "Type": "AWS::Lambda::Version",
+            "DeletionPolicy": "Retain",
+            "Properties": {
+              "FunctionName": {
+                "Ref": "GetDataLambdaFunction"
+              },
+              "CodeSha256": "NxHleGoraiiO/00FeHrQmJvxdSrsysePnljViBpQxOY="
+            }
+          },
+          "ApiGatewayResourceUser": {
+            "Type": "AWS::ApiGateway::Resource",
+            "Properties": {
+              "ParentId": {
+                "Fn::ImportValue": "SharedGW-rootResourceId-dev"
+              },
+              "PathPart": "user",
+              "RestApiId": {
+                "Fn::ImportValue": "SharedGW-restApiId-dev"
+              }
+            }
+          },
+          "ApiGatewayMethodUserOptions": {
+            "Type": "AWS::ApiGateway::Method",
+            "Properties": {
+              "AuthorizationType": "NONE",
+              "HttpMethod": "OPTIONS",
+              "MethodResponses": [
+                {
+                  "StatusCode": "200",
+                  "ResponseParameters": {
+                    "method.response.header.Access-Control-Allow-Origin": true,
+                    "method.response.header.Access-Control-Allow-Headers": true,
+                    "method.response.header.Access-Control-Allow-Methods": true
+                  },
+                  "ResponseModels": {}
+                }
+              ],
+              "RequestParameters": {},
+              "Integration": {
+                "Type": "MOCK",
+                "RequestTemplates": {
+                  "application/json": "{statusCode:200}"
+                },
+                "ContentHandling": "CONVERT_TO_TEXT",
+                "IntegrationResponses": [
+                  {
+                    "StatusCode": "200",
+                    "ResponseParameters": {
+                      "method.response.header.Access-Control-Allow-Origin": "'*'",
+                      "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent'",
+                      "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,GET'"
+                    },
+                    "ResponseTemplates": {
+                      "application/json": ""
+                    }
+                  }
+                ]
+              },
+              "ResourceId": {
+                "Ref": "ApiGatewayResourceUser"
+              },
+              "RestApiId": {
+                "Fn::ImportValue": "SharedGW-restApiId-dev"
+              }
+            }
+          },
+          "ApiGatewayMethodUserGet": {
+            "Type": "AWS::ApiGateway::Method",
+            "Properties": {
+              "HttpMethod": "GET",
+              "RequestParameters": {},
+              "ResourceId": {
+                "Ref": "ApiGatewayResourceUser"
+              },
+              "RestApiId": {
+                "Fn::ImportValue": "SharedGW-restApiId-dev"
+              },
+              "ApiKeyRequired": false,
+              "AuthorizationType": "COGNITO_USER_POOLS",
+              "AuthorizerId": "7hd4yk",
+              "Integration": {
+                "IntegrationHttpMethod": "POST",
+                "Type": "AWS_PROXY",
+                "Uri": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition"
+                      },
+                      ":apigateway:",
+                      {
+                        "Ref": "AWS::Region"
+                      },
+                      ":lambda:path/2015-03-31/functions/",
+                      {
+                        "Fn::GetAtt": [
+                          "GetDataLambdaFunction",
+                          "Arn"
+                        ]
+                      },
+                      "/invocations"
+                    ]
+                  ]
+                }
+              },
+              "MethodResponses": []
+            },
+            "DependsOn": [
+              "GetDataLambdaPermissionApiGateway"
+            ]
+          },
+          "ApiGatewayDeployment1651178633799": {
+            "Type": "AWS::ApiGateway::Deployment",
+            "Properties": {
+              "RestApiId": {
+                "Fn::ImportValue": "SharedGW-restApiId-dev"
+              },
+              "StageName": "dev"
+            },
+            "DependsOn": [
+              "ApiGatewayMethodUserOptions",
+              "ApiGatewayMethodUserGet"
+            ]
+          },
+          "GetDataLambdaPermissionApiGateway": {
+            "Type": "AWS::Lambda::Permission",
+            "Properties": {
+              "FunctionName": {
+                "Fn::GetAtt": [
+                  "GetDataLambdaFunction",
+                  "Arn"
+                ]
+              },
+              "Action": "lambda:InvokeFunction",
+              "Principal": "apigateway.amazonaws.com",
+              "SourceArn": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:",
+                    {
+                      "Ref": "AWS::Partition"
+                    },
+                    ":execute-api:",
+                    {
+                      "Ref": "AWS::Region"
+                    },
+                    ":",
+                    {
+                      "Ref": "AWS::AccountId"
+                    },
+                    ":",
+                    {
+                      "$ref": "$[\"service\"][\"provider\"][\"apiGateway\"][\"restApiId\"]"
+                    },
+                    "/*/*"
+                  ]
+                ]
+              }
+            }
+          }
+        },
+        "Outputs": {
+          "ServerlessDeploymentBucketName": {
+            "Value": "wealt",
+            "Export": {
+              "Name": "sls-simpleApp-dev-ServerlessDeploymentBucketName"
+            }
+          },
+          "GetDataLambdaFunctionQualifiedArn": {
+            "Description": "Current Lambda function version",
+            "Value": {
+              "Ref": "GetDataLambdaVersion19qtKbPyMq78VXnDkS8GFdvoPtiz1WmPjD8WKP40ZRk"
+            },
+            "Export": {
+              "Name": "sls-simpleApp-dev-GetDataLambdaFunctionQualifiedArn"
+            }
+          },
+          "ServiceEndpoint": {
+            "Description": "URL of the service endpoint",
+            "Value": {
+              "Fn::Join": [
+                "",
+                [
+                  "https://",
+                  {
+                    "Fn::ImportValue": "SharedGW-restApiId-dev"
+                  },
+                  ".execute-api.",
+                  {
+                    "Ref": "AWS::Region"
+                  },
+                  ".",
+                  {
+                    "Ref": "AWS::URLSuffix"
+                  },
+                  "/dev"
+                ]
+              ]
+            },
+            "Export": {
+              "Name": "sls-simpleApp-dev-ServiceEndpoint"
+            }
+          }
+        }
+      },
+      "vpc": {}
+    },
+    "custom": {
+      "tableName": "table_rds-dev",
+      "authorizerId": "7hd4yk"
+    },
+    "pluginsData": {},
+    "functions": {
+      "getData": {
+        "layers": {
+          "$ref": "$[\"service\"][\"provider\"][\"compiledCloudFormationTemplate\"][\"Resources\"][\"GetDataLambdaFunction\"][\"Properties\"][\"Layers\"]"
+        },
+        "handler": "src/main.run",
+        "package": {
+          "patterns": [
+            "!./**",
+            "src/main.py"
+          ],
+          "artifact": "/home/ali-innoppia/Desktop/graphql/.serverless/getData.zip"
+        },
+        "events": [
+          {
+            "http": {
+              "path": "user",
+              "method": "get",
+              "cors": {
+                "origin": "*",
+                "methods": [
+                  "OPTIONS",
+                  "GET"
+                ],
+                "headers": [
+                  "Content-Type",
+                  "X-Amz-Date",
+                  "Authorization",
+                  "X-Api-Key",
+                  "X-Amz-Security-Token",
+                  "X-Amz-User-Agent"
+                ],
+                "allowCredentials": false
+              },
+              "authorizer": {
+                "type": "COGNITO_USER_POOLS",
+                "managedExternally": false,
+                "authorizerId": "7hd4yk",
+                "resultTtlInSeconds": 300,
+                "identitySource": "method.request.header.Authorization",
+                "claims": []
+              },
+              "integration": "AWS_PROXY"
+            }
+          }
+        ],
+        "name": "simpleApp-dev-getData",
+        "memory": 1280,
+        "timeout": 30,
+        "runtime": "python3.8",
+        "vpc": {},
+        "versionLogicalId": "GetDataLambdaVersion19qtKbPyMq78VXnDkS8GFdvoPtiz1WmPjD8WKP40ZRk"
+      }
+    },
+    "configValidationMode": "warn",
+    "serviceFilename": "serverless.yml",
+    "initialServerlessConfig": {
+      "service": "simpleApp",
+      "custom": {
+        "$ref": "$[\"service\"][\"custom\"]"
+      },
+      "provider": {
+        "$ref": "$[\"service\"][\"provider\"]"
+      },
+      "package": {
+        "patterns": [
+          "!./**"
+        ],
+        "individually": true,
+        "artifactsS3KeyDirname": "serverless/simpleApp/dev/code-artifacts",
+        "deploymentBucket": "wealt",
+        "artifactDirectoryName": "serverless/simpleApp/dev/1651178634781-2022-04-28T20:43:54.781Z"
+      },
+      "functions": {
+        "$ref": "$[\"service\"][\"functions\"]"
+      }
+    },
+    "layers": {},
+    "isDashboardMonitoringPreconfigured": false
+  },
+  "package": {
+    "individually": true,
+    "artifactDirectoryName": "serverless/simpleApp/dev/1651178634781-2022-04-28T20:43:54.781Z",
+    "artifact": ""
+  }
+}
